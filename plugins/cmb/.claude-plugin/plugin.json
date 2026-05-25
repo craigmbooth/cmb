@@ -1,7 +1,7 @@
 {
   "name": "cmb",
-  "version": "1.0.0",
-  "description": "Craig's personal toolkit. cmb:audit runs a multi-dimensional, parallel codebase audit and returns a 0-10 scorecard per dimension with a severity-ranked list of findings.",
+  "version": "1.0.1",
+  "description": "Concurrent Multi-pass Bot (cmb), Craig's personal toolkit. cmb:audit runs a multi-dimensional, parallel codebase audit and returns a 0-10 scorecard per dimension with a severity-ranked list of findings.",
   "author": {
     "name": "Craig Booth",
     "url": "https://github.com/craigmbooth"

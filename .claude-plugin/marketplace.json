@@ -4,11 +4,11 @@
     "name": "Craig Booth",
     "email": "craigmbooth@gmail.com"
   },
-  "description": "Craig's personal Claude Code plugins.",
+  "description": "Concurrent Multi-pass Bot (cmb) — Craig's personal Claude Code plugins.",
   "plugins": [
     {
       "name": "cmb",
-      "description": "Multi-dimensional parallel codebase audit (cmb:audit). Version is set in plugins/cmb/.claude-plugin/plugin.json.",
+      "description": "Concurrent Multi-pass Bot (cmb): multi-dimensional parallel codebase audit (cmb:audit). Version is set in plugins/cmb/.claude-plugin/plugin.json.",
       "source": "./plugins/cmb",
       "keywords": ["audit", "code-review", "security", "performance"]
     }

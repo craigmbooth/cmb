@@ -1,7 +1,8 @@
 ---
 name: audit
 description: >-
-  Multi-dimensional codebase audit. Runs security, performance, and
+  Concurrent Multi-pass Bot (cmb) — a multi-dimensional codebase audit. Runs
+  security, performance, and
   language-specific best-practices reviewers in parallel (plus accessibility when
   frontend/UI code is present), then produces a 0–10 scorecard per dimension and a
   severity-prioritized list of improvements, saved as a dated markdown report and
@@ -13,7 +14,7 @@ description: >-
   do not invoke.
 ---
 
-# cmb:audit
+# cmb:audit — Concurrent Multi-pass Bot
 
 Audit a codebase across several quality dimensions at once, fan the work out to
 parallel sub-agents, and return one **scorecard** (0–10 per dimension) plus a

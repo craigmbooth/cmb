@@ -1,9 +1,10 @@
-# cmb
+# Concurrent Multi-pass Bot (cmb)
 
-Craig's personal Claude Code plugin marketplace.
+**Concurrent Multi-pass Bot** (`cmb`) is Craig's personal Claude Code plugin
+marketplace.
 
-This repo is **both a marketplace and a plugin**. The `cmb` plugin currently
-ships one skill:
+This repo is **both a marketplace and a plugin**. The Concurrent Multi-pass Bot
+(`cmb`) plugin currently ships one skill:
 
 - **`cmb:audit`** — a multi-dimensional, parallel codebase audit. It fans out one
   reviewer per quality dimension (security, performance, best practices, test
