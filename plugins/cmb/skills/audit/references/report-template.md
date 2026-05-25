@@ -1,8 +1,9 @@
 # Report template
 
 Assemble the final report in this shape. Fill the scorecard and Top Priorities
-yourself from the per-dimension sections; paste each dimension's section
-verbatim from `.audit-scratch/<dimension>.md`.
+yourself from the per-dimension sections; paste each dimension's section verbatim
+from the text the reviewer returned (or from `.audit-scratch/<dimension>.md` if
+you used scratch files).
 
 ```markdown
 # Full Audit — <repo or directory name>
@@ -24,6 +25,22 @@ verbatim from `.audit-scratch/<dimension>.md`.
 
 <If any dimension is in the 0–2 critical band, add a one-line call-out here so a
 healthy-looking average can't bury it.>
+
+## Changes since last audit
+
+<Built from the step-4 diff. On a first run, replace this whole section with a
+single line: "First audit — no prior run to compare against.">
+
+**Since <prior date>: <R> fixed · <N> new · <A> newly-assessed · <O> still open.**
+
+- ✅ **Fixed** (<R>): <title> [<severity> · <dimension>], …
+- 🆕 **New** (<N>): **[<severity> · <dimension>]** <title> — `file:line`, …  *(regressions: a dimension that ran before now has an issue it didn't)*
+- 🔎 **Newly assessed** (<A>): **[<severity> · <dimension>]** <title> — `file:line`, …  *(dimensions not scored last run, e.g. accessibility switching on — not regressions)*
+- ⏳ **Still open** (<O>): **[<severity> · <dimension>]** <title> — open since <first_seen>, …
+
+<Lead with any newly-introduced Critical/High under **New** — a real regression
+matters more than raw counts. Don't alarm on **Newly assessed**: those issues may
+be long-standing, just never scored before.>
 
 ## Top priorities
 

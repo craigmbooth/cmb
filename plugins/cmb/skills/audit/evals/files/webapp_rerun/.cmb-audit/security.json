@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "dimension": "security",
+  "generated_at": "2026-04-01T09:00:00Z",
+  "scope": "whole repository",
+  "score": 2,
+  "headline": "Critical SQLi + command injection + hardcoded secret",
+  "findings": [
+    {
+      "id": "security:app.py:sql-injection:631f370d",
+      "severity": "critical",
+      "rule": "sql-injection",
+      "title": "User input interpolated into SQL query",
+      "file": "app.py",
+      "line": 22,
+      "evidence": "cur.execute(f\"... LIKE '%{name}%'\")",
+      "recommendation": "Use parameterized queries.",
+      "status": "new",
+      "first_seen": "2026-04-01T09:00:00Z"
+    },
+    {
+      "id": "security:app.py:command-injection:3d741e86",
+      "severity": "critical",
+      "rule": "command-injection",
+      "title": "shell=True with user input",
+      "file": "app.py",
+      "line": 41,
+      "evidence": "subprocess.check_output(f\"ping -c 1 {host}\", shell=True)",
+      "recommendation": "Drop shell=True; pass an arg list.",
+      "status": "new",
+      "first_seen": "2026-04-01T09:00:00Z"
+    },
+    {
+      "id": "security:app.py:hardcoded-secret:4d816184",
+      "severity": "high",
+      "rule": "hardcoded-secret",
+      "title": "Hardcoded API_KEY in source",
+      "file": "app.py",
+      "line": 7,
+      "evidence": "API_KEY = \"FAKEKEY_...\"",
+      "recommendation": "Read from the environment.",
+      "status": "new",
+      "first_seen": "2026-04-01T09:00:00Z"
+    }
+  ]
+}

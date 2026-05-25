@@ -25,6 +25,12 @@ not modify code. That separation is deliberate: an honest assessment you trust
 is more valuable than a pile of half-applied edits, and the prioritized list is
 what lets the user (or a follow-up fixer) decide what to tackle first.
 
+Each run produces two things: a dated human **markdown report** under
+`audit-reports/`, and a machine-readable **`.cmb-audit/`** state directory the
+*next* run reads to tell you what's been **fixed, what's new, and what's still
+open** since last time. The dimensions are unchanged; the findings just also get
+written in a stable JSON format (see step 4 and `references/output-schema.md`).
+
 ## The dimensions
 
 Four core dimensions always run. Accessibility and Design system run only when
@@ -99,11 +105,18 @@ Give each reviewer sub-agent a prompt containing:
   doesn't have to infer them.
 - **How it returns its section**: have each reviewer **return its full section as
   text in its final message** — that channel always works, even when a sub-agent
-  can't write files. Its message should end with the numeric score and a one-line
-  headline so you can build the scorecard without re-reading the whole section.
-  As an *optional* optimization, if file writes are available the reviewer may
-  also drop its section in `.audit-scratch/<dimension>.md` to keep large findings
-  out of the orchestration transcript — but never depend on that working.
+  can't write files. Immediately after the prose section, have it return a fenced
+  ` ```json ` block of its findings in the per-dimension shape from
+  `${CLAUDE_PLUGIN_ROOT}/skills/audit/references/output-schema.md` — each finding
+  carrying `severity`, `rule` (a short stable kebab-case slug for the *kind* of
+  issue, e.g. `sql-injection`), `title`, `file`, `line`, `evidence`,
+  `recommendation`, and a `locator` only when two same-`rule` findings share a
+  file. That structured block is what step 4 persists, so it must cover the same
+  findings as the prose. Its message should end with the numeric score and a
+  one-line headline so you can build the scorecard without re-reading the whole
+  section. As an *optional* optimization, if file writes are available the reviewer
+  may also drop its section in `.audit-scratch/<dimension>.md` to keep large
+  findings out of the orchestration transcript — but never depend on that working.
 
 If you use `.audit-scratch/`, create it first and clean it up afterward (or leave
 a single `.gitignore` with `*`); it's a working directory, not a deliverable. If
@@ -169,7 +182,42 @@ scored as if it were broken, and stops "things you could add" from masquerading
 as "things that are wrong." When you catch yourself flagging an absence, ask: is
 this code *broken*, or merely *not gold-plated*? Score accordingly.
 
-### 4. Assemble the report
+### 4. Persist findings to `.cmb-audit/` and diff against the prior run
+
+Before writing the human report, persist the findings as JSON under `.cmb-audit/`
+at the **root of the audited repo** (the user's cwd — *not* the plugin). This is
+what lets the next run, or any other tool, see what changed. The full contract is
+`${CLAUDE_PLUGIN_ROOT}/skills/audit/references/output-schema.md`; in short:
+
+- `.cmb-audit/manifest.json` — scorecard, scope, stack, commit, run metadata.
+- `.cmb-audit/<dimension>.json` — the findings for each dimension that ran.
+
+**Happy path (shell + Python available).** Assemble the reviewers' JSON findings
+blocks into one payload (shape in the schema doc) and pipe it to the helper, which
+computes the stable finding ids, reads any prior `.cmb-audit/`, overwrites the
+files, and prints the diff:
+
+```
+python "${CLAUDE_PLUGIN_ROOT}/skills/audit/scripts/cmb_audit_store.py" \
+    write --root <audited-repo-root> < payload.json
+```
+
+Capture the printed diff JSON — it classifies findings as **resolved** (present
+last run, gone now), **new** (absent last run), and **open** (carried over, with
+the original `first_seen`). You surface it in steps 5 and 6.
+
+**Fallback (no shell / no Python).** Write the same files by hand following
+output-schema.md: compute each finding's `id` with the documented sha256 rule,
+read the prior `.cmb-audit/` yourself, and classify resolved/new/open the same
+way. The id rule must match exactly — that's what makes the same issue match
+across runs. If even file writes are unavailable, skip persistence and say so in
+the summary rather than failing the audit.
+
+**gitignore.** `.cmb-audit/` is tool state, not a deliverable — keep it out of
+git. If the audited repo has a `.gitignore` without a `.cmb-audit/` entry, add
+one; if there's no `.gitignore`, just mention it rather than creating noise.
+
+### 5. Assemble the report
 
 Collect each reviewer's section — from the text it returned, or from
 `.audit-scratch/<dimension>.md` if you used files. Build the report using
@@ -179,6 +227,14 @@ Collect each reviewer's section — from the text it returned, or from
   **Overall** score (the mean of the dimension scores; if any dimension scored
   in the 0–2 critical band, say so explicitly next to the overall — a healthy
   average can hide a critical).
+- A **Changes since last audit** section built from the step-4 diff: the
+  resolved / new / newly-assessed / still-open counts, the resolved wins called
+  out by name, and any newly-introduced Critical/High highlighted. Keep **new**
+  (a regression in a dimension that ran before) separate from **newly_assessed**
+  (a dimension that simply wasn't scored last time, e.g. accessibility switching
+  on) — conflating them turns "we added a dimension" into a false alarm. On a
+  first run (no prior `.cmb-audit/`), state "first audit — no prior run to
+  compare against."
 - A **cross-cutting Top Priorities** list: merge every Critical and High finding
   from all dimensions into one severity-ordered list. This is the "what do I do
   first" answer across the whole audit.
@@ -188,11 +244,13 @@ Write the report to `audit-reports/cmb-audit-YYYY-MM-DD.md` (create the
 directory; use today's date). If a report for today already exists, append a
 `-2`, `-3`, … suffix rather than overwriting.
 
-### 5. Summarize in chat
+### 6. Summarize in chat
 
-Print the scorecard table, the top 3–5 cross-cutting priorities, and the path to
-the full report. Keep it tight — the file has the detail; the chat is the
-at-a-glance verdict.
+Print the scorecard table, a one-line **changes-since-last-audit** verdict (e.g.
+"2 fixed, 1 new regression, 5 newly-assessed, 3 still open since 2026-05-01" — or
+"first audit" when there's no prior run), the top 3–5 cross-cutting priorities,
+and the path to the full report. Keep it tight — the file has the detail; the
+chat is the at-a-glance verdict.
 
 ## Adding a dimension
 

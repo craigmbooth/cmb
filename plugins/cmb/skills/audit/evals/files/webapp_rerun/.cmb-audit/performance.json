@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "dimension": "performance",
+  "generated_at": "2026-04-01T09:00:00Z",
+  "scope": "whole repository",
+  "score": 6,
+  "headline": "One N+1 on the users path",
+  "findings": [
+    {
+      "id": "performance:app.py:n-plus-1:200c7ab0",
+      "severity": "medium",
+      "rule": "n-plus-1",
+      "title": "Per-user order-count query inside the loop",
+      "file": "app.py",
+      "line": 29,
+      "evidence": "order_cur.execute(...) inside for user in users",
+      "recommendation": "Aggregate with a JOIN/GROUP BY.",
+      "status": "new",
+      "first_seen": "2026-04-01T09:00:00Z"
+    }
+  ]
+}
