@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Users</title>
+</head>
+<body>
+  <img src="/static/logo.png" alt="Acme company logo">
+  <h1>Users</h1>
+  <form action="/users" method="get">
+    <label for="name">Search by name</label>
+    <input type="text" id="name" name="name">
+    <button type="submit">Search</button>
+  </form>
+  <ul>
+    {% for u in users %}
+      <li>{{ u.name }} — {{ u.orders }} orders</li>
+    {% endfor %}
+  </ul>
+</body>
+</html>

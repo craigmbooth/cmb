@@ -1,0 +1,25 @@
+:root {
+  /* Color palette (primitive) */
+  --color-bg: #f4f4f4;
+  --color-surface: #ffffff;
+  --color-border: #dddddd;
+  --color-primary: #1a73e8;
+  --color-danger: #e53935;
+  --color-text: #333333;
+  --color-on-primary: #ffffff;
+
+  /* Spacing scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+
+  /* Radius */
+  --radius-sm: 4px;
+
+  /* Typography */
+  --font-sans: Arial, system-ui, sans-serif;
+  --text-sm: 14px;
+  --text-lg: 22px;
+  --text-xl: 28px;
+}

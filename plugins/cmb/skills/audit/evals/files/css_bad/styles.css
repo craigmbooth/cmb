@@ -1,0 +1,29 @@
+.card {
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 13px;
+}
+.card-title {
+  color: #1a73e8;
+  font-size: 14px;
+}
+.btn {
+  background: #1a73e8;
+  color: #ffffff;
+  padding: 10px 18px;
+  font-size: 15px;
+  border-radius: 4px;
+}
+.btn-danger {
+  background: #e53935;
+  color: #fff;
+  padding: 10px 18px;
+  font-size: 15px;
+  border-radius: 4px;
+}
+.sidebar {
+  background: #fefefe;
+  width: 240px;
+  padding: 12px;
+}

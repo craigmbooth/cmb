@@ -1,0 +1,11 @@
+{
+  "name": "cmb",
+  "version": "1.0.0",
+  "description": "Craig's personal toolkit. cmb:audit runs a multi-dimensional, parallel codebase audit and returns a 0-10 scorecard per dimension with a severity-ranked list of findings.",
+  "author": {
+    "name": "Craig Booth",
+    "url": "https://github.com/craigmbooth"
+  },
+  "license": "MIT",
+  "keywords": ["audit", "code-review", "security", "performance", "accessibility"]
+}

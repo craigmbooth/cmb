@@ -1,0 +1,47 @@
+body {
+  margin: 0;
+  background: var(--color-bg);
+  font-family: var(--font-sans);
+  color: var(--color-text);
+}
+
+.header {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  padding: var(--space-3);
+}
+
+.header h1 {
+  font-size: var(--text-lg);
+  margin: 0;
+}
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.card-title {
+  color: var(--color-primary);
+  font-size: var(--text-sm);
+}
+
+.metric {
+  font-size: var(--text-xl);
+  margin: var(--space-1) 0;
+}
+
+.btn {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  border: none;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+}
+
+.btn-danger {
+  background: var(--color-danger);
+}

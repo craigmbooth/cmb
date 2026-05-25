@@ -1,0 +1,74 @@
+{
+  "skill_name": "audit",
+  "evals": [
+    {
+      "id": 1,
+      "name": "fullstack-webapp-all-dimensions",
+      "prompt": "Audit this little Flask web app and give me a scorecard — I want to know how it's doing on security, performance, code quality, and accessibility, with the most important things to fix first. The code is in the webapp/ directory (app.py plus templates/index.html).",
+      "expected_output": "A dated markdown report plus a chat scorecard. All four dimensions run (frontend is present). Scorecard has a 0-10 score per dimension and an overall. Each dimension has a severity-prioritized findings list citing file:line. Security catches the SQL injection, hardcoded secret, command injection (shell=True), and debug=True. Performance catches the N+1 query. Best-practices catches the bare except. Accessibility catches the missing alt text, unlabeled input, div-as-button, and low contrast. A cross-cutting Top Priorities list leads with the critical security issues.",
+      "files": ["evals/files/webapp"],
+      "expectations": [
+        "Scorecard reports a 0-10 score for all four dimensions (security, performance, best practices, accessibility) plus an overall score",
+        "The accessibility dimension actually ran (it is scored, not skipped), because frontend code is present",
+        "Security identifies the SQL injection in app.py (user input interpolated into the SQL query)",
+        "Security identifies the hardcoded API_KEY secret in app.py",
+        "Security identifies the command injection / shell=True usage in the /ping route",
+        "Performance identifies the N+1 query (per-user order-count query inside the loop)",
+        "Best-practices identifies the bare/silent except that swallows errors",
+        "Accessibility identifies the <img> that is missing alt text",
+        "Accessibility flags at least one of: the unlabeled text input, the div-used-as-a-button, or the low-contrast text",
+        "Findings cite concrete file:line locations (e.g. app.py:NN, templates/index.html:NN)",
+        "A cross-cutting Top Priorities list is present and leads with a critical security issue",
+        "The security score is in the low band (<= 4 / 10) reflecting the critical SQL injection"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "backend-only-accessibility-skip",
+      "prompt": "Can you do a full code-quality audit of my datalib library and score it? It's a small pure-Python data-parsing module (parser.py). Give me a prioritized list of what to fix.",
+      "expected_output": "A report scoring security, performance, and best-practices, with accessibility correctly marked N/A (no frontend code in scope) rather than given a fabricated score. Security catches pickle.loads on untrusted input and shell=True. Performance catches the O(n^2) dedupe. Best-practices catches the mutable default argument and bare except. Findings cite file:line.",
+      "files": ["evals/files/datalib"],
+      "expectations": [
+        "Accessibility is explicitly marked N/A (no frontend code in scope) and is NOT given a fabricated numeric score",
+        "Security, performance, and best-practices each receive a 0-10 score",
+        "Security identifies the unsafe deserialization (pickle.loads on untrusted input)",
+        "Security identifies the shell=True subprocess usage",
+        "Performance identifies the O(n^2) dedupe (nested loop / membership against a growing list)",
+        "Best-practices identifies the mutable default argument (seen=[])",
+        "Best-practices identifies the bare except in parse_int",
+        "Findings cite concrete file:line locations in parser.py"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "path-scoped-payments",
+      "prompt": "Audit just the payments service in this repo — it's at services/payments. I don't need the rest of the monorepo reviewed right now, just that directory. Give me scores and the top issues.",
+      "expected_output": "A report scoped to services/payments only. The scope line names services/payments. The SQL injection in services/payments/charge.py is caught as a critical security finding. Files under services/notifications are NOT reviewed or reported. Accessibility is N/A (no frontend in the payments service).",
+      "files": ["evals/files/monorepo"],
+      "expectations": [
+        "The report's scope is limited to services/payments (the scope is named in the report)",
+        "The SQL injection in services/payments/charge.py is caught as a critical security finding",
+        "Files under services/notifications (e.g. send.py) are NOT reviewed or reported on",
+        "Per-dimension 0-10 scores are present",
+        "Accessibility is marked N/A (no frontend code in the payments service)",
+        "Findings cite concrete file:line locations in charge.py"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "clean-code-no-padding",
+      "prompt": "Run a full audit on this small web app and score it. I think it's in decent shape but want a second opinion on security, performance, code quality, and accessibility — flag anything real, top priorities first. Code's in the clean_app/ directory.",
+      "expected_output": "All four dimensions run (frontend present). Because the code is genuinely clean — parameterized SQL, env-based secret, specific exception handling with logging, a single JOIN+GROUP BY (no N+1), and an accessible template (lang, alt text, label-for, real button, default contrast) — scores are high (>=7, ideally >=8) with NO Critical or High findings. The skill does not fabricate issues to look thorough; any findings are genuinely minor/low and grounded in real file:line evidence. Accessibility is NOT marked N/A here because frontend is present.",
+      "files": ["evals/files/clean_app"],
+      "expectations": [
+        "All four dimensions run and are scored (accessibility is NOT marked N/A, because frontend is present)",
+        "No Critical or High severity findings are reported (the code is genuinely clean)",
+        "Every dimension scores in the solid-or-better band (>= 7 / 10)",
+        "Security does NOT report a SQL injection (the query is parameterized) — no false positive",
+        "Security does NOT report a hardcoded secret (the API key is read from the environment) — no false positive",
+        "Performance does NOT report an N+1 query (a single JOIN+GROUP BY is used) — no false positive",
+        "Any findings that are reported cite a real file:line and correspond to genuinely minor issues, not invented ones"
+      ]
+    }
+  ]
+}

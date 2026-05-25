@@ -1,0 +1,17 @@
+{
+  "name": "cmb",
+  "owner": {
+    "name": "Craig Booth",
+    "email": "craigmbooth@gmail.com"
+  },
+  "description": "Craig's personal Claude Code plugins.",
+  "plugins": [
+    {
+      "name": "cmb",
+      "version": "1.0.0",
+      "description": "Multi-dimensional parallel codebase audit (cmb:audit).",
+      "source": "./plugins/cmb",
+      "keywords": ["audit", "code-review", "security", "performance"]
+    }
+  ]
+}
