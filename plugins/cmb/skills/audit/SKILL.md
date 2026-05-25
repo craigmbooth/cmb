@@ -250,7 +250,8 @@ Print the scorecard table, a one-line **changes-since-last-audit** verdict (e.g.
 "2 fixed, 1 new regression, 5 newly-assessed, 3 still open since 2026-05-01" — or
 "first audit" when there's no prior run), the top 3–5 cross-cutting priorities,
 and the path to the full report. Keep it tight — the file has the detail; the
-chat is the at-a-glance verdict.
+chat is the at-a-glance verdict. Close by noting the user can run **`/cmb:fix`**
+to act on these findings (it reads the `.cmb-audit/` you just wrote).
 
 ## Adding a dimension
 

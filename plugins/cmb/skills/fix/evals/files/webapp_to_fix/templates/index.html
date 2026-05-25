@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+<head>
+  <title>Users</title>
+</head>
+<body>
+  <!-- Planted: image with no alt text -->
+  <img src="/static/logo.png">
+
+  <h1>Users</h1>
+
+  <form action="/users">
+    <!-- Planted: text input with no associated label -->
+    <input type="text" name="name">
+    <!-- Planted: div used as a button (not keyboard accessible) + low contrast -->
+    <div onclick="this.closest('form').submit()" style="color:#bbbbbb;background:#ffffff">Search</div>
+  </form>
+
+  <ul>
+    {% for u in users %}
+      <li>{{ u.name }} — {{ u.orders }} orders</li>
+    {% endfor %}
+  </ul>
+</body>
+</html>

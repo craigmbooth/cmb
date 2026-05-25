@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "tool": "cmb:audit",
+  "generated_at": "2026-05-20T10:00:00Z",
+  "scope": "whole repository",
+  "stack": [
+    "python",
+    "flask"
+  ],
+  "commit": null,
+  "overall_score": 4.2,
+  "critical_present": true,
+  "dimensions": {
+    "security": {
+      "ran": true,
+      "score": 2,
+      "headline": "Critical SQLi + command injection; hardcoded secret; debug on",
+      "findings_file": "security.json",
+      "counts": {
+        "critical": 2,
+        "high": 1,
+        "medium": 1,
+        "low": 0
+      }
+    },
+    "performance": {
+      "ran": true,
+      "score": 6,
+      "headline": "One N+1 on the users path",
+      "findings_file": "performance.json",
+      "counts": {
+        "critical": 0,
+        "high": 0,
+        "medium": 1,
+        "low": 0
+      }
+    },
+    "best-practices": {
+      "ran": true,
+      "score": 6,
+      "headline": "Bare except swallows errors",
+      "findings_file": "best-practices.json",
+      "counts": {
+        "critical": 0,
+        "high": 0,
+        "medium": 1,
+        "low": 0
+      }
+    },
+    "accessibility": {
+      "ran": true,
+      "score": 3,
+      "headline": "Missing alt text, unlabeled input",
+      "findings_file": "accessibility.json",
+      "counts": {
+        "critical": 0,
+        "high": 0,
+        "medium": 1,
+        "low": 0
+      }
+    }
+  }
+}

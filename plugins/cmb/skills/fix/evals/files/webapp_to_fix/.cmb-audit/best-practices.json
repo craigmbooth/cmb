@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "dimension": "best-practices",
+  "generated_at": "2026-05-20T10:00:00Z",
+  "scope": "whole repository",
+  "score": 6,
+  "headline": "Bare except swallows errors",
+  "findings": [
+    {
+      "id": "best-practices:app.py:bare-except:1fefd689",
+      "severity": "medium",
+      "rule": "bare-except",
+      "title": "Bare except silently swallows all errors",
+      "file": "app.py",
+      "line": 43,
+      "evidence": "except:  pass",
+      "recommendation": "Catch specific exceptions and log.",
+      "status": "new",
+      "first_seen": "2026-05-20T10:00:00Z"
+    }
+  ]
+}

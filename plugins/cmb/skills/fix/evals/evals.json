@@ -1,0 +1,36 @@
+{
+  "skill_name": "fix",
+  "evals": [
+    {
+      "id": 1,
+      "name": "security-fix-from-audit",
+      "prompt": "I already ran the audit on this Flask app (it's in the current directory, app.py plus templates/). Fix all the security issues it found — the SQL injection, the command injection, the hardcoded secret, and the debug mode. Leave the other categories (performance, accessibility, best practices) alone for now.",
+      "expected_output": "cmb:fix reads .cmb-audit/, applies edits that resolve the four security findings in app.py, and leaves the non-security findings untouched. The SQL injection becomes a parameterized query; the /ping command injection drops shell=True (uses an argument list); the API_KEY is read from the environment instead of a hardcoded literal; debug mode is no longer hardcoded on. The N+1 query (performance) and the template alt-text issue (accessibility) are NOT changed because the user scoped to security. The skill does not modify .cmb-audit/ and does not commit; it recommends re-running /cmb:audit to verify. If a test/typecheck command exists it is run.",
+      "files": ["evals/files/webapp_to_fix"],
+      "expectations": [
+        "The SQL injection in app.py is fixed: the query is parameterized (a placeholder + params) rather than an f-string interpolating user input into SQL",
+        "The command injection in the /ping route is fixed: shell=True is removed (e.g. an argument list is passed) and/or the host is validated",
+        "The hardcoded API_KEY is fixed: it is now read from the environment (e.g. os.environ) rather than assigned a string literal in source",
+        "Debug mode is fixed: app.run no longer hardcodes debug=True",
+        "The performance N+1 query (per-user order count inside the loop) is left UNCHANGED, because the user scoped the fix to security only",
+        "The skill did NOT modify .cmb-audit/ (manifest.json still shows generated_at 2026-05-20T10:00:00Z)",
+        "The skill recommends running /cmb:audit afterward to verify the fixes (and does not claim it updated the audit state itself)",
+        "The skill did not create a git commit (edits are left in the working tree for the user to review)"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "warn-no-audit",
+      "prompt": "Run cmb:fix on this app and fix the problems — the code is in app.py.",
+      "expected_output": "There is no .cmb-audit/ directory in this repo, so cmb:fix cannot work from a recorded audit. It should warn the user that no audit has been run and recommend running /cmb:audit first, rather than hunting for problems itself or fabricating findings. It must NOT edit app.py.",
+      "files": ["evals/files/no_audit_app"],
+      "expectations": [
+        "The skill detects that there is no .cmb-audit/ in the repo and says so clearly",
+        "It recommends running /cmb:audit first before fixing",
+        "It does NOT modify app.py (no code edits are made without an audit to work from)",
+        "It does NOT fabricate audit findings or run its own ad-hoc review in place of the audit",
+        "The SQL injection in app.py is left intact (untouched) since no fix was authorized"
+      ]
+    }
+  ]
+}

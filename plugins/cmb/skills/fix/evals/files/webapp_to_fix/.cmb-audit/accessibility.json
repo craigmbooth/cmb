@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "dimension": "accessibility",
+  "generated_at": "2026-05-20T10:00:00Z",
+  "scope": "whole repository",
+  "score": 3,
+  "headline": "Missing alt text, unlabeled input",
+  "findings": [
+    {
+      "id": "accessibility:index.html:missing-alt-text:bd6caed0",
+      "severity": "medium",
+      "rule": "missing-alt-text",
+      "title": "Image missing alt attribute",
+      "file": "templates/index.html",
+      "line": 8,
+      "evidence": "<img src=...> with no alt",
+      "recommendation": "Add a descriptive alt attribute.",
+      "status": "new",
+      "first_seen": "2026-05-20T10:00:00Z"
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "dimension": "security",
+  "generated_at": "2026-05-20T10:00:00Z",
+  "scope": "whole repository",
+  "score": 2,
+  "headline": "Critical SQLi + command injection; hardcoded secret; debug on",
+  "findings": [
+    {
+      "id": "security:app.py:sql-injection:631f370d",
+      "severity": "critical",
+      "rule": "sql-injection",
+      "title": "User input interpolated into SQL query",
+      "file": "app.py",
+      "line": 22,
+      "evidence": "cur.execute(f\"... LIKE '%{name}%'\")",
+      "recommendation": "Use a parameterized query.",
+      "status": "new",
+      "first_seen": "2026-05-20T10:00:00Z"
+    },
+    {
+      "id": "security:app.py:command-injection:3d741e86",
+      "severity": "critical",
+      "rule": "command-injection",
+      "title": "shell=True with user input in /ping",
+      "file": "app.py",
+      "line": 41,
+      "evidence": "subprocess.check_output(f\"ping -c 1 {host}\", shell=True)",
+      "recommendation": "Drop shell=True; pass an arg list and validate host.",
+      "status": "new",
+      "first_seen": "2026-05-20T10:00:00Z"
+    },
+    {
+      "id": "security:app.py:hardcoded-secret:4d816184",
+      "severity": "high",
+      "rule": "hardcoded-secret",
+      "title": "Hardcoded API_KEY in source",
+      "file": "app.py",
+      "line": 7,
+      "evidence": "API_KEY = \"FAKEKEY_...\"",
+      "recommendation": "Read API_KEY from the environment.",
+      "status": "new",
+      "first_seen": "2026-05-20T10:00:00Z"
+    },
+    {
+      "id": "security:app.py:debug-enabled:b8e6c1c5",
+      "severity": "medium",
+      "rule": "debug-enabled",
+      "title": "Flask debug mode enabled in entrypoint",
+      "file": "app.py",
+      "line": 50,
+      "evidence": "app.run(debug=True)",
+      "recommendation": "Disable debug; drive via env, default off.",
+      "status": "new",
+      "first_seen": "2026-05-20T10:00:00Z"
+    }
+  ]
+}
