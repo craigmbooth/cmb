@@ -8,8 +8,7 @@
   "plugins": [
     {
       "name": "cmb",
-      "version": "1.0.0",
-      "description": "Multi-dimensional parallel codebase audit (cmb:audit).",
+      "description": "Multi-dimensional parallel codebase audit (cmb:audit). Version is set in plugins/cmb/.claude-plugin/plugin.json.",
       "source": "./plugins/cmb",
       "keywords": ["audit", "code-review", "security", "performance"]
     }
