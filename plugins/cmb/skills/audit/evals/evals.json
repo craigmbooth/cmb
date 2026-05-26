@@ -20,9 +20,9 @@
         "Findings cite concrete file:line locations (e.g. app.py:NN, templates/index.html:NN)",
         "A cross-cutting Top Priorities list is present and leads with a critical security issue",
         "The security score is in the low band (<= 4 / 10) reflecting the critical SQL injection",
-        "Machine-readable JSON is written under .cmb-audit/ (manifest.json plus per-dimension files such as security.json and accessibility.json)",
-        "The .cmb-audit/ JSON is valid and each finding carries an id, severity, file, and recommendation field",
-        "Because there is no prior .cmb-audit/, the run states this is a first audit (no prior run to compare against) rather than showing an empty diff"
+        "Machine-readable JSON is written under .cmb/audit/ (manifest.json plus per-dimension files such as security.json and accessibility.json)",
+        "The .cmb/audit/ JSON is valid and each finding carries an id, severity, file, and recommendation field",
+        "Because there is no prior .cmb/audit/, the run states this is a first audit (no prior run to compare against) rather than showing an empty diff"
       ]
     },
     {
@@ -77,14 +77,14 @@
       "id": 5,
       "name": "rerun-diff-since-last-audit",
       "prompt": "Audit the webapp_rerun/ Flask app again and tell me what's changed since the last audit — what got fixed, what's new, and what's still outstanding. There's a previous audit cached in the directory.",
-      "expected_output": "A re-run that reads the prior .cmb-audit/ (dated 2026-04-01) and reports a diff. The hardcoded secret is now resolved/fixed (app.py reads API_KEY from the environment), so it appears under what got fixed and is NOT in the rewritten security.json. The SQL injection, command injection (shell=True), N+1 query, and bare except are all still present and reported as still-open / carried-over. A 'Changes since last audit' section is present (this is NOT treated as a first audit). The .cmb-audit/ files are overwritten with the current state, and carried-over findings keep their earlier first_seen (2026-04-01) rather than resetting to today.",
+      "expected_output": "A re-run that reads the prior .cmb/audit/ (dated 2026-04-01) and reports a diff. The hardcoded secret is now resolved/fixed (app.py reads API_KEY from the environment), so it appears under what got fixed and is NOT in the rewritten security.json. The SQL injection, command injection (shell=True), N+1 query, and bare except are all still present and reported as still-open / carried-over. A 'Changes since last audit' section is present (this is NOT treated as a first audit). The .cmb/audit/ files are overwritten with the current state, and carried-over findings keep their earlier first_seen (2026-04-01) rather than resetting to today.",
       "files": ["evals/files/webapp_rerun"],
       "expectations": [
-        "Detects the prior .cmb-audit/ and includes a 'Changes since last audit' section (does NOT treat this as a first audit)",
+        "Detects the prior .cmb/audit/ and includes a 'Changes since last audit' section (does NOT treat this as a first audit)",
         "Reports the previously-flagged hardcoded secret as resolved/fixed (app.py now reads API_KEY from the environment, no longer hardcoded)",
         "Reports the SQL injection in app.py as a still-open / carried-over issue (it is still present)",
         "Still flags the command injection (shell=True) and the N+1 query, which remain in the code",
-        "The rewritten .cmb-audit/security.json no longer contains a hardcoded-secret finding",
+        "The rewritten .cmb/audit/security.json no longer contains a hardcoded-secret finding",
         "Carried-over findings preserve their earlier first_seen (2026-04-01) instead of resetting to today",
         "Findings cite concrete file:line locations in app.py"
       ]

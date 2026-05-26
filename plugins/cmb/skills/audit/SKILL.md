@@ -26,7 +26,7 @@ is more valuable than a pile of half-applied edits, and the prioritized list is
 what lets the user (or a follow-up fixer) decide what to tackle first.
 
 Each run produces two things: a dated human **markdown report** under
-`audit-reports/`, and a machine-readable **`.cmb-audit/`** state directory the
+`audit-reports/`, and a machine-readable **`.cmb/audit/`** state directory the
 *next* run reads to tell you what's been **fixed, what's new, and what's still
 open** since last time. The dimensions are unchanged; the findings just also get
 written in a stable JSON format (see step 4 and `references/output-schema.md`).
@@ -190,19 +190,19 @@ scored as if it were broken, and stops "things you could add" from masquerading
 as "things that are wrong." When you catch yourself flagging an absence, ask: is
 this code *broken*, or merely *not gold-plated*? Score accordingly.
 
-### 4. Persist findings to `.cmb-audit/` and diff against the prior run
+### 4. Persist findings to `.cmb/audit/` and diff against the prior run
 
-Before writing the human report, persist the findings as JSON under `.cmb-audit/`
+Before writing the human report, persist the findings as JSON under `.cmb/audit/`
 at the **root of the audited repo** (the user's cwd — *not* the plugin). This is
 what lets the next run, or any other tool, see what changed. The full contract is
 `${CLAUDE_PLUGIN_ROOT}/skills/audit/references/output-schema.md`; in short:
 
-- `.cmb-audit/manifest.json` — scorecard, scope, stack, commit, run metadata.
-- `.cmb-audit/<dimension>.json` — the findings for each dimension that ran.
+- `.cmb/audit/manifest.json` — scorecard, scope, stack, commit, run metadata.
+- `.cmb/audit/<dimension>.json` — the findings for each dimension that ran.
 
 **Happy path (shell + Python available).** Assemble the reviewers' JSON findings
 blocks into one payload (shape in the schema doc) and pipe it to the helper, which
-computes the stable finding ids, reads any prior `.cmb-audit/`, overwrites the
+computes the stable finding ids, reads any prior `.cmb/audit/`, overwrites the
 files, and prints the diff:
 
 ```
@@ -216,14 +216,46 @@ the original `first_seen`). You surface it in steps 5 and 6.
 
 **Fallback (no shell / no Python).** Write the same files by hand following
 output-schema.md: compute each finding's `id` with the documented sha256 rule,
-read the prior `.cmb-audit/` yourself, and classify resolved/new/open the same
+read the prior `.cmb/audit/` yourself, and classify resolved/new/open the same
 way. The id rule must match exactly — that's what makes the same issue match
 across runs. If even file writes are unavailable, skip persistence and say so in
 the summary rather than failing the audit.
 
-**gitignore.** `.cmb-audit/` is tool state, not a deliverable — keep it out of
-git. If the audited repo has a `.gitignore` without a `.cmb-audit/` entry, add
-one; if there's no `.gitignore`, just mention it rather than creating noise.
+**gitignore.** `.cmb/audit/` is tool state, not a deliverable — keep it out of
+git. **But** `.cmb/decisions.json` (written by `cmb:triage`, see step 4½) **is**
+source of truth and must be tracked. The right shape:
+
+```
+.cmb/audit/
+!.cmb/decisions.json
+```
+
+If the audited repo has a `.gitignore` and `.cmb/audit/` isn't already excluded
+(or the explicit `!.cmb/decisions.json` not-ignore isn't there), add both;
+if there's no `.gitignore`, just mention it rather than creating noise.
+
+### 4½. Apply per-finding decisions
+
+If the audited repo has a `.cmb/decisions.json` (written by
+[`cmb:triage`](../triage/SKILL.md) — see
+`${CLAUDE_PLUGIN_ROOT}/skills/audit/references/decisions-schema.md` for the
+file shape), fold those decisions into the diff *before* assembling the
+report. Run:
+
+```
+python "${CLAUDE_PLUGIN_ROOT}/skills/triage/scripts/cmb_triage_store.py" \
+    apply --root <audited-repo-root> --manifest .cmb/audit/manifest.json
+```
+
+The helper returns a JSON payload with `counts`, `applied` (one entry per
+matched decision with its `state`: `suppressed` / `planned` / `dismissed` /
+`escalated` / `expired`), and `orphans` (decisions whose finding id is no
+longer present in the current audit — likely slug-drift renames). Capture
+this payload — step 5 weaves it into the report and step 6 into the chat
+summary.
+
+If `.cmb/decisions.json` is absent, skip this step. **Never** write to it
+yourself — `cmb:triage` is the only canonical writer.
 
 ### 5. Assemble the report
 
@@ -241,12 +273,28 @@ Collect each reviewer's section — from the text it returned, or from
   (a regression in a dimension that ran before) separate from **newly_assessed**
   (a dimension that simply wasn't scored last time, e.g. accessibility switching
   on) — conflating them turns "we added a dimension" into a false alarm. On a
-  first run (no prior `.cmb-audit/`), state "first audit — no prior run to
+  first run (no prior `.cmb/audit/`), state "first audit — no prior run to
   compare against."
 - A **cross-cutting Top Priorities** list: merge every Critical and High finding
-  from all dimensions into one severity-ordered list. This is the "what do I do
-  first" answer across the whole audit.
-- The **per-dimension sections** exactly as each reviewer returned them.
+  from all dimensions into one severity-ordered list. **Exclude** findings that
+  step 4½ classified as `suppressed` (accept-risk) or `planned`. **Include**
+  any tagged `escalated` or `expired` — with a 🚨 ESCALATED / ⏰ EXPIRED marker
+  on the line, since the safety valve voided the decision. This is the
+  "what do I do first" answer across the whole audit.
+- The **per-dimension sections** exactly as each reviewer returned them, with
+  decision markers folded in: prefix `planned` findings with 🗺 (and add
+  `→ <plan_file>` when present); move `suppressed` findings into a single
+  collapsed "Suppressed by accept-risk" block at the bottom of their section;
+  omit `dismissed` findings entirely (the section's count line notes
+  "(N dismissed)" so the user can audit by inversion if curious).
+- A **Decisions** subsection inside "Changes since last audit" summarizing the
+  step-4½ payload: counts (`suppressed N · planned N · dismissed N · escalated
+  N · expired N · orphans N`), the planned items by title with `→ plan_file`,
+  and a 🚨 callout for every escalated/expired entry naming the finding and
+  the severity that voided the decision (e.g. "`security:…hardcoded-secret:…`
+  was accept-risk at **high**; now **critical** — re-triage with
+  `/cmb:triage`"). Orphans get a one-line callout suggesting
+  `/cmb:triage --relink`.
 
 Write the report to `audit-reports/cmb-audit-YYYY-MM-DD.md` (create the
 directory; use today's date). If a report for today already exists, append a
@@ -255,11 +303,20 @@ directory; use today's date). If a report for today already exists, append a
 ### 6. Summarize in chat
 
 Print the scorecard table, a one-line **changes-since-last-audit** verdict (e.g.
-"2 fixed, 1 new regression, 5 newly-assessed, 3 still open since 2026-05-01" — or
-"first audit" when there's no prior run), the top 3–5 cross-cutting priorities,
+"2 fixed, 1 new regression, 5 newly-assessed, 3 still open since 2026-05-01,
+**3 suppressed · 2 planned · 1 escalated**" — fold the decisions counts in when
+step 4½ ran; or "first audit" when there's no prior run), the top 3–5
+cross-cutting priorities (skipping suppressed/planned, surfacing escalated),
 and the path to the full report. Keep it tight — the file has the detail; the
-chat is the at-a-glance verdict. Close by noting the user can run **`/cmb:fix`**
-to act on these findings (it reads the `.cmb-audit/` you just wrote).
+chat is the at-a-glance verdict. Close by noting:
+
+- the user can run **`/cmb:fix`** to act on the open findings (it reads the
+  `.cmb/audit/` you just wrote and respects `.cmb/decisions.json`)
+- the user can run **`/cmb:triage`** to set verbs on findings they don't want
+  to fix inline (plan / accept-risk / dismiss)
+
+If step 4½ surfaced any escalated/expired/orphan decisions, mention them by
+count in the close — those are the ones the user needs to re-decide.
 
 ## Adding a dimension
 

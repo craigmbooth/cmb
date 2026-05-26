@@ -2,7 +2,7 @@
 name: fix
 description: >-
   Concurrent Multi-pass Bot (cmb) — apply fixes for the issues that cmb:audit
-  found. Reads the audit's machine-readable findings from .cmb-audit/, shows a
+  found. Reads the audit's machine-readable findings from .cmb/audit/, shows a
   summary, lets the user choose which categories and which specific findings to
   fix, then makes the edits and runs the project's tests. The companion to
   cmb:audit: audit reviews and scores, fix acts on the result. INVOCATION: this
@@ -16,7 +16,7 @@ description: >-
 # cmb:fix — Concurrent Multi-pass Bot
 
 Act on the findings from a `cmb:audit` run. The audit is a *reviewer* — it reads,
-scores, and records findings to `.cmb-audit/` but never changes code. `cmb:fix` is
+scores, and records findings to `.cmb/audit/` but never changes code. `cmb:fix` is
 the *fixer*: it reads those findings, lets the user decide what to tackle, and
 makes the edits.
 
@@ -24,7 +24,7 @@ The separation is deliberate. Fixing is consequential and easy to overdo, so thi
 skill never fixes everything by default and never guesses at problems — it works
 only from what the audit actually recorded, and only on what the user picks. It
 **edits the working tree but does not commit** (the user reviews the diff and
-commits, or runs their ship flow), and it **does not modify `.cmb-audit/`** — the
+commits, or runs their ship flow), and it **does not modify `.cmb/audit/`** — the
 audit is the single source of truth for audit state. After fixing, you re-run
 `/cmb:audit` to confirm the fixes are real.
 
@@ -32,18 +32,32 @@ audit is the single source of truth for audit state. After fixing, you re-run
 
 ### 1. Load the audit state — and bail kindly if there is none
 
-Look for `.cmb-audit/` at the root of the repo (the user's cwd). Read
-`.cmb-audit/manifest.json` and each `.cmb-audit/<dimension>.json`. The exact shape
+Look for `.cmb/audit/` at the root of the repo (the user's cwd). Read
+`.cmb/audit/manifest.json` and each `.cmb/audit/<dimension>.json`. The exact shape
 is in `${CLAUDE_PLUGIN_ROOT}/skills/audit/references/output-schema.md` — read it if
 you need the field definitions.
 
-**If `.cmb-audit/` is absent or empty**, there is nothing to fix *from*. Do not
+Also load `.cmb/decisions.json` if it exists (the per-finding decisions
+recorded by [`cmb:triage`](../triage/SKILL.md) — schema at
+`${CLAUDE_PLUGIN_ROOT}/skills/audit/references/decisions-schema.md`). Use the
+helper to read it and classify decisions against the current findings:
+
+```
+python "${CLAUDE_PLUGIN_ROOT}/skills/triage/scripts/cmb_triage_store.py" \
+    apply --root <audited-repo-root> --manifest .cmb/audit/manifest.json
+```
+
+The `applied` array tells you which findings are `suppressed` (accept-risk),
+`planned`, `dismissed`, `escalated`, or `expired`. You'll use this in step 2
+to filter the menu and in step 4 to short-circuit the interview.
+
+**If `.cmb/audit/` is absent or empty**, there is nothing to fix *from*. Do not
 start hunting for problems yourself and do not fabricate findings — that's the
 audit's job, and inventing work here defeats the point of the two-skill split.
 Instead, tell the user plainly:
 
 > No audit found — `cmb:fix` works from a `cmb:audit` run, and there's no
-> `.cmb-audit/` in this repo yet. Run `/cmb:audit` first, then `/cmb:fix`.
+> `.cmb/audit/` in this repo yet. Run `/cmb:audit` first, then `/cmb:fix`.
 
 Offer to run `/cmb:audit` now (by following the audit skill) if they'd like, but
 don't do it unasked. Then stop.
@@ -66,6 +80,18 @@ Print a tight summary so the user can decide where to spend effort:
 - Per dimension, the **finding counts** by severity.
 - The **findings themselves**, grouped by dimension and ordered by severity, each
   as: `[severity] title — file:line` plus its one-line recommendation.
+
+**Apply decisions to the menu.** Use the `applied` payload from step 1:
+
+- `dismissed` and `suppressed` (accept-risk) findings: **omit** from the menu
+  entirely. Mention them at the bottom in one line ("N suppressed by
+  accept-risk, M dismissed — see `.cmb/decisions.json`").
+- `planned` findings: list them in a separate "Planned (refresh plan only,
+  not for inline fix)" bucket, each with `→ <plan_file>` if recorded.
+- `escalated` / `expired` findings: list normally in the menu with a 🚨 or
+  ⏰ marker — the safety valve voided the decision and they're back in play.
+  Mention this explicitly: "(2 findings are back in play: an accept-risk
+  escalated and an expiry hit; run `/cmb:triage --review` to re-decide.)"
 
 Keep it scannable — this is a menu, not the full report. Point the user to
 `audit-reports/` for the prose if they want depth.
@@ -97,10 +123,30 @@ the whole safety mechanism.
 
 While interviewing, flag findings that **aren't a quick mechanical edit** — things
 like "no test suite", "add rate limiting", or an architectural change. These are
-real, but they're projects, not one-liners. Confirm the user actually wants
-`cmb:fix` to take them on, and set expectations: for a large one, it's often
-better to scaffold a focused start (or write a short plan) than to half-apply a
-sweeping change. Don't silently turn a "fix" into a refactor.
+real, but they're projects, not one-liners. For each one, offer the user an
+explicit choice via `AskUserQuestion`:
+
+1. **Implement now (inline)** — proceed with the fix as a normal step-5 edit,
+   knowing it may sprawl. Use when scope is genuinely small or the user
+   confirms they want it tackled.
+2. **Defer with a plan** — record a `plan` decision in `.cmb/decisions.json`
+   (so the next audit shows it 🗺 and `cmb:fix` skips it). Optionally scaffold
+   a stub plan file at `audit-reports/<dimension>-<rule>-<short>.md` for the
+   user to fill in. Write the decision via:
+
+   ```
+   echo '<payload-json>' | python "${CLAUDE_PLUGIN_ROOT}/skills/triage/scripts/cmb_triage_store.py" \
+       write --root <audited-repo-root>
+   ```
+
+   (the helper merges with any existing decisions). **Never** do this without
+   an explicit user prompt — the writer must be a deliberate choice, not an
+   inferred one.
+3. **Skip this round** — no decision recorded; the finding stays in the menu
+   on subsequent runs.
+
+This formalizes the "this is a project, not a one-liner" conversation.
+Confirm before sprawl, and don't silently turn a "fix" into a refactor.
 
 ### 5. Apply the fixes
 
@@ -146,9 +192,15 @@ Close with:
 
 - **What was fixed**, grouped by category, each with the file(s) touched.
 - **What was skipped or deferred** (user-declined, already-fixed-on-read, or large
-  items left as a plan) and why.
+  items left as a plan) and why. If you wrote any `plan` decisions to
+  `.cmb/decisions.json` via the mid-fix defer path (step 4), name them
+  explicitly and link to any scaffolded plan files — the user should see those
+  in the diff (`git diff .cmb/decisions.json`).
+- **What was hidden by existing decisions** — one line: "N findings skipped
+  because of accept-risk / dismiss decisions in `.cmb/decisions.json`." Keep
+  the user aware that the menu was filtered.
 - The **verification result**.
-- A reminder that `cmb:fix` **did not commit** and **did not change `.cmb-audit/`**
+- A reminder that `cmb:fix` **did not commit** and **did not change `.cmb/audit/`**
   — the user should review the diff and commit (or run their ship flow), then run
   **`/cmb:audit`** to confirm: the audit's diff will show the fixed findings as
   *resolved*, which is the real proof the loop worked.

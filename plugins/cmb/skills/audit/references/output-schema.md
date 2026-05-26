@@ -1,22 +1,22 @@
-# Machine-readable output: `.cmb-audit/`
+# Machine-readable output: `.cmb/audit/`
 
 Alongside the human markdown report, every audit persists its findings as JSON
-under a `.cmb-audit/` directory **at the root of the audited repo** (the user's
+under a `.cmb/audit/` directory **at the root of the audited repo** (the user's
 cwd, *not* the plugin). This is what lets a later run — or any other tool — pick
 up where the last one left off and tell what changed.
 
 There are two file shapes:
 
-- `.cmb-audit/manifest.json` — one per audit: scorecard, scope, stack, run
+- `.cmb/audit/manifest.json` — one per audit: scorecard, scope, stack, run
   metadata, and a pointer to each dimension file.
-- `.cmb-audit/<dimension>.json` — one per dimension that ran (`security.json`,
+- `.cmb/audit/<dimension>.json` — one per dimension that ran (`security.json`,
   `performance.json`, `best-practices.json`, `test-coverage.json`,
   `documentation.json`, `accessibility.json`, `design-system.json`,
   `infrastructure.json`, `observability.json`): the findings for that dimension.
 
-`.cmb-audit/` holds **current state**, not history — each run overwrites it. The
+`.cmb/audit/` holds **current state**, not history — each run overwrites it. The
 dated markdown under `audit-reports/` is the historical record. The audited repo
-should ignore `.cmb-audit/` in git (see SKILL.md step on gitignore).
+should ignore `.cmb/audit/` in git (see SKILL.md step on gitignore).
 
 The helper script `scripts/cmb_audit_store.py` produces and consumes exactly this
 format (and computes IDs + the diff for you). The schema is specified here so the
@@ -95,7 +95,7 @@ Field notes:
 
 ## The finding `id` (stable across runs)
 
-The diff works by matching findings between the prior `.cmb-audit/` and the
+The diff works by matching findings between the prior `.cmb/audit/` and the
 current one **by `id`**. So an id must be stable for "the same underlying issue"
 even when its line number moves or its wording is tweaked. Therefore the id is
 derived from things that *don't* drift — and deliberately **excludes the line
@@ -119,7 +119,7 @@ issue will get different ids on consecutive runs and every finding will look
 
 ## Diff semantics (read-back)
 
-Given the **prior** `.cmb-audit/` (if present) and the **current** findings:
+Given the **prior** `.cmb/audit/` (if present) and the **current** findings:
 
 - **resolved** — id in prior, absent from current → the issue is gone (fixed, or
   no longer in scope). Resolved findings are *not* written to the new files; they
@@ -151,7 +151,7 @@ audit" section):
 }
 ```
 
-If there's no prior `.cmb-audit/`, `had_prior` is `false`, everything is `new`,
+If there's no prior `.cmb/audit/`, `had_prior` is `false`, everything is `new`,
 and `newly_assessed` is empty; say "first audit — no prior run to compare
 against" rather than showing an empty diff.
 

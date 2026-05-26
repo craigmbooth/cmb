@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""cmb:audit — persist findings to .cmb-audit/ and diff against the prior run.
+"""cmb:audit — persist findings to .cmb/audit/ and diff against the prior run.
 
 This is the *optional* happy path for the JSON output described in
 references/output-schema.md. It exists because two things are easy to get subtly
@@ -20,7 +20,7 @@ Usage:
     # verify the tool itself:
     python cmb_audit_store.py --self-test
 
-`write` reads any existing .cmb-audit/ under --root, writes the new manifest +
+`write` reads any existing .cmb/audit/ under --root, writes the new manifest +
 per-dimension files (overwriting state), and prints the diff summary JSON to
 stdout for the caller to fold into the chat summary and the markdown report.
 
@@ -71,7 +71,7 @@ def finding_id(dimension: str, file: str, rule: str, locator: str = "") -> str:
 
 
 def _audit_dir(root: str) -> str:
-    return os.path.join(root, ".cmb-audit")
+    return os.path.join(root, ".cmb/audit")
 
 
 def _atomic_write(path: str, text: str) -> None:
@@ -294,8 +294,8 @@ def self_test() -> int:
         assert b1["diff"]["counts"] == {"resolved": 0, "new": 2, "newly_assessed": 0, "open": 0}, b1["diff"]["counts"]
         assert b1["manifest"]["overall_score"] == 3
         assert b1["manifest"]["critical_present"] is True
-        assert os.path.exists(os.path.join(tmp, ".cmb-audit", "security.json"))
-        assert not os.path.exists(os.path.join(tmp, ".cmb-audit", "accessibility.json"))
+        assert os.path.exists(os.path.join(tmp, ".cmb/audit", "security.json"))
+        assert not os.path.exists(os.path.join(tmp, ".cmb/audit", "accessibility.json"))
 
         # run 2: secret fixed (removed); sqli persists at a NEW line; a genuine new
         # security finding (security ran last time); and a performance finding in a
@@ -323,7 +323,7 @@ def self_test() -> int:
         assert b2["diff"]["resolved"][0]["title"] == "secret"
         write_state(tmp, b2)
         # overwrite cleared the now-empty-of-findings dims correctly
-        assert not os.path.exists(os.path.join(tmp, ".cmb-audit", "accessibility.json"))
+        assert not os.path.exists(os.path.join(tmp, ".cmb/audit", "accessibility.json"))
         print("self-test OK")
         return 0
     finally:
@@ -331,11 +331,11 @@ def self_test() -> int:
 
 
 def main(argv=None) -> int:
-    p = argparse.ArgumentParser(description="Persist cmb:audit findings to .cmb-audit/ and diff against the prior run.")
+    p = argparse.ArgumentParser(description="Persist cmb:audit findings to .cmb/audit/ and diff against the prior run.")
     p.add_argument("--self-test", action="store_true", help="run internal checks and exit")
     sub = p.add_subparsers(dest="cmd")
 
-    pw = sub.add_parser("write", help="write .cmb-audit/ from a payload and print the diff")
+    pw = sub.add_parser("write", help="write .cmb/audit/ from a payload and print the diff")
     pw.add_argument("--root", default=".", help="root of the audited repo (default: cwd)")
     pw.add_argument("--payload", default="-", help="payload JSON file, or - for stdin (default)")
     pw.add_argument("--now", default=None, help="override timestamp (ISO8601, for testing)")
