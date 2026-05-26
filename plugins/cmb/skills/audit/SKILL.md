@@ -33,10 +33,11 @@ written in a stable JSON format (see step 4 and `references/output-schema.md`).
 
 ## The dimensions
 
-Four core dimensions always run. Accessibility and Design system run only when
+Five core dimensions always run. Accessibility and Design system run only when
 there's frontend/UI code in scope; Infrastructure runs only when there's
-infrastructure-as-code (Terraform, Docker, CI/CD) in scope. Scoring a conditional
-dimension on a codebase that lacks it is noise, not signal.
+infrastructure-as-code (Terraform, Docker, CI/CD) in scope; Logging & observability
+runs only when application/runtime code is in scope. Scoring a conditional dimension
+on a codebase that lacks it is noise, not signal.
 
 | Dimension | Always? | What it judges |
 |---|---|---|
@@ -44,9 +45,11 @@ dimension on a codebase that lacks it is noise, not signal.
 | **Performance** | yes | Algorithmic cost, DB query patterns (N+1), caching, I/O, resource leaks |
 | **Best practices** | yes | Language/framework idioms, structure, error handling, maintainability |
 | **Test coverage** | yes | Stakes-weighted coverage: are critical & error paths tested, are the tests meaningful |
+| **Documentation** | yes | README/setup accuracy, public-API & inline docs, and whether docs match the code — stale docs are worse than missing |
 | **Accessibility** | only if frontend detected | WCAG issues: semantics, alt text, contrast, keyboard nav, ARIA, focus |
 | **Design system** | only if frontend detected | CSS/styling: is there a design system; are tokens/CSS variables used; are colors & sizes hardcoded in markup |
 | **Infrastructure** | only if IaC detected | Terraform/Docker/CI misconfig: exposed resources, secrets, encryption, root containers, least-privilege |
+| **Logging & observability** | only if runtime code detected | Logging quality/coverage & levels, failure visibility, correlation IDs, metrics/health where expected |
 
 The dimension list is extensible — see "Adding a dimension" at the end.
 
@@ -81,6 +84,11 @@ Spend a moment understanding what you're auditing before dispatching. Determine:
   Kubernetes/Helm manifests, or CI/CD config (`.github/workflows/`, etc.). If none
   appear in scope, skip Infrastructure and record it as `N/A (no infrastructure
   code in scope)`.
+- **Application/runtime code present?** This decides whether Logging & observability
+  runs. Signals: source files in a runtime/application language — `.py`,
+  `.js`/`.ts`/`.jsx`/`.tsx`, `.go`, `.rb`, `.java`/`.kt`, `.rs`, `.php`, `.cs`,
+  `.ex`, etc. If the scope is only docs (`.md`), data, or IaC/config with no
+  application code, skip it and record `N/A (no application/runtime code in scope)`.
 
 Assemble the final dimension list from this profile.
 
@@ -255,9 +263,11 @@ to act on these findings (it reads the `.cmb-audit/` you just wrote).
 
 ## Adding a dimension
 
-To add a dimension (e.g. test coverage, documentation quality, API design),
-create `skills/audit/references/<dimension>.md` in the plugin source, following
-the shape of the existing rubrics
+To add a dimension (e.g. API design, dependency freshness), create
+`skills/audit/references/<dimension>.md` in the plugin source, following the shape
+of the existing rubrics
 (what to look for · severity guidance · scoring bands · section format), then add
-it to the dispatch list in step 3 and the scorecard. The orchestration logic
-doesn't change — it's already dimension-agnostic.
+it to the dimensions table above (with its always/conditional rule, plus a
+detection signal in step 2 if conditional) and the scorecard in
+`references/report-template.md`. The orchestration logic doesn't change — it's
+already dimension-agnostic.

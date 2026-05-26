@@ -11,8 +11,8 @@ There are two file shapes:
   metadata, and a pointer to each dimension file.
 - `.cmb-audit/<dimension>.json` — one per dimension that ran (`security.json`,
   `performance.json`, `best-practices.json`, `test-coverage.json`,
-  `accessibility.json`, `design-system.json`, `infrastructure.json`): the findings
-  for that dimension.
+  `documentation.json`, `accessibility.json`, `design-system.json`,
+  `infrastructure.json`, `observability.json`): the findings for that dimension.
 
 `.cmb-audit/` holds **current state**, not history — each run overwrites it. The
 dated markdown under `audit-reports/` is the historical record. The audited repo

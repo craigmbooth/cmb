@@ -18,9 +18,11 @@ you used scratch files).
 | Performance | N/10 | <one line> |
 | Best practices | N/10 | <one line> |
 | Test coverage | N/10 | <one line> |
+| Documentation | N/10 | <one line> |
 | Accessibility | N/10 *or* N/A | <one line, or "no frontend code in scope"> |
 | Design system | N/10 *or* N/A | <one line, or "no frontend code in scope"> |
 | Infrastructure | N/10 *or* N/A | <one line, or "no infrastructure code in scope"> |
+| Logging & observability | N/10 *or* N/A | <one line, or "no application/runtime code in scope"> |
 | **Overall** | **N/10** | <e.g. "solid, but one critical security issue"> |
 
 <If any dimension is in the 0–2 critical band, add a one-line call-out here so a
